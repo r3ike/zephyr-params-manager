@@ -113,6 +113,65 @@ static void send_autopilot_version(struct sockaddr_in* dest) {
     send_mavlink_message_to(msg, dest);
 }
 
+static void send_sys_status_to(struct sockaddr_in* dest) {
+    mavlink_message_t msg;
+
+    // --- Sensori di base (come prima) ---
+    uint32_t onboard_control_sensors_present =
+        MAV_SYS_STATUS_SENSOR_3D_GYRO |
+        MAV_SYS_STATUS_SENSOR_3D_ACCEL |
+        MAV_SYS_STATUS_SENSOR_3D_MAG |
+        MAV_SYS_STATUS_SENSOR_ABSOLUTE_PRESSURE |
+        MAV_SYS_STATUS_SENSOR_GPS;
+
+    uint32_t onboard_control_sensors_enabled = onboard_control_sensors_present;
+    uint32_t onboard_control_sensors_health = onboard_control_sensors_present; // tutti OK
+
+    // --- Sensori estesi (MAVLink 2) ---
+    // Se non hai sensori aggiuntivi (es. lidar, flusso ottico), metti 0.
+    uint32_t onboard_control_sensors_present_extended = 0;
+    uint32_t onboard_control_sensors_enabled_extended = 0;
+    uint32_t onboard_control_sensors_health_extended = 0;
+
+    // --- Altri parametri ---
+    uint16_t load = 0;              // carico CPU in centesimi (0 = non disponibile)
+    uint16_t voltage_battery = 0;   // mV (0 = non disponibile)
+    int16_t  current_battery = -1;  // mA (-1 = non disponibile)
+    int8_t   battery_remaining = -1;// percentuale (-1 = non disponibile)
+
+    uint16_t drop_rate_comm = 0;
+    uint16_t errors_comm = 0;
+    uint16_t errors_count1 = 0;
+    uint16_t errors_count2 = 0;
+    uint16_t errors_count3 = 0;
+    uint16_t errors_count4 = 0;
+
+    // --- Pacchettizzazione con TUTTI i campi ---
+    mavlink_msg_sys_status_pack(
+        1,                          // system_id
+        MAV_COMP_ID_AUTOPILOT1,    // component_id
+        &msg,
+        onboard_control_sensors_present,
+        onboard_control_sensors_enabled,
+        onboard_control_sensors_health,
+        load,
+        voltage_battery,
+        current_battery,
+        battery_remaining,
+        drop_rate_comm,
+        errors_comm,
+        errors_count1,
+        errors_count2,
+        errors_count3,
+        errors_count4,
+        onboard_control_sensors_present_extended,   // nuovo!
+        onboard_control_sensors_enabled_extended,   // nuovo!
+        onboard_control_sensors_health_extended     // nuovo!
+    );
+
+    send_mavlink_message_to(msg, dest);
+}
+
 static void mavlink_thread(void *, void *, void *) {
     sock = socket(AF_INET, SOCK_DGRAM, 0);
     if (sock < 0) {
@@ -123,7 +182,7 @@ static void mavlink_thread(void *, void *, void *) {
     struct sockaddr_in addr;
     memset(&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
-    addr.sin_port = htons(14550);
+    addr.sin_port = htons(0);  // porta effimera
     addr.sin_addr.s_addr = INADDR_ANY;
 
     if (bind(sock, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
@@ -136,7 +195,7 @@ static void mavlink_thread(void *, void *, void *) {
     struct sockaddr_in heartbeat_dest;
     memset(&heartbeat_dest, 0, sizeof(heartbeat_dest));
     heartbeat_dest.sin_family = AF_INET;
-    heartbeat_dest.sin_port = htons(14551);
+    heartbeat_dest.sin_port = htons(14550);  // QGC default
     inet_pton(AF_INET, "127.0.0.1", &heartbeat_dest.sin_addr);
 
     uint8_t buf[MAVLINK_MAX_PACKET_LEN];
@@ -149,6 +208,7 @@ static void mavlink_thread(void *, void *, void *) {
         if (now - last_heartbeat >= 1000) {
             send_heartbeat_to(&heartbeat_dest);
             send_autopilot_version(&heartbeat_dest);
+            send_sys_status_to(&heartbeat_dest); 
             last_heartbeat = now;
         }
 
