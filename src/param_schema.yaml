@@ -1,0 +1,33 @@
+parameters:
+  - name: ROLL_P
+    type: float
+    default: 1.5
+    min: 0.1
+    max: 10.0
+    desc: "Guadagno proporzionale rollio"
+
+  - name: PITCH_P
+    type: float
+    default: 1.5
+    min: 0.1
+    max: 10.0
+    desc: "Guadagno proporzionale beccheggio"
+
+  - name: YAW_P
+    type: float
+    default: 0.8
+    min: 0.1
+    max: 5.0
+    desc: "Guadagno proporzionale imbardata"
+
+  - name: AHRS_ENABLE
+    type: bool
+    default: true
+    desc: "Abilita stima assetto"
+
+  - name: LOG_LEVEL
+    type: int32
+    default: 2
+    min: 0
+    max: 4
+    desc: "Livello di log (0=OFF, 1=ERR, 2=WARN, 3=INFO, 4=DBG)"
