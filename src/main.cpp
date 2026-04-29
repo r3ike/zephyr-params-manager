@@ -12,9 +12,9 @@ int main() {
     
     while (true) {
         // Esempio di lettura parametri
-        autopilot::params::ParamFloat roll_p(autopilot::params::ID::ROLL_P);
-        autopilot::params::ParamBool ahrs(autopilot::params::ID::AHRS_ENABLE);
-        LOG_INF("ROLL_P = %f, AHRS = %d", roll_p.get(), ahrs.get());
+        //autopilot::params::ParamFloat roll_p(autopilot::params::ID::ROLL_P);
+        //autopilot::params::ParamBool ahrs(autopilot::params::ID::AHRS_ENABLE);
+        //LOG_INF("ROLL_P = %f, AHRS = %d", roll_p.get(), ahrs.get());
         k_sleep(K_SECONDS(5));
     }
     return 0;

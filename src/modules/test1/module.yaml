@@ -1,0 +1,18 @@
+module_name: attitude
+parameters:
+  - group: Control
+    definitions:
+      ROLL_P:
+        description:
+          short: "Guadagno proporzionale rollio"
+        type: float
+        default: 1.5
+        min: 0.1
+        max: 10.0
+      PITCH_P:
+        description:
+          short: "Guadagno proporzionale beccheggio"
+        type: float
+        default: 1.5
+        min: 0.1
+        max: 10.0
